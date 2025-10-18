@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OMEN - Thank You</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@900&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Roboto Mono', monospace; background-color: #000000; overflow: hidden; }
+        .font-montserrat { font-family: 'Montserrat', sans-serif; }
+        #background-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; opacity: 0.15; }
+        .logo { font-size: clamp(3rem, 15vw, 10rem); letter-spacing: -0.05em; }
+    </style>
+</head>
+<body class="text-white">
+
+    <canvas id="background-canvas"></canvas>
+
+    <main class="relative z-10 flex flex-col items-center justify-center min-h-screen p-4 text-center">
+
+        <h1 class="font-montserrat font-black text-4xl md:text-6xl text-white">YOU'RE IN.</h1>
+
+        <p class="text-lg md:text-xl text-white/70 mt-4 max-w-lg">
+            Thank you for joining the waitlist. To get our newsletter and exclusive content, complete your profile below.
+        </p>
+
+        <form id="details-form" class="w-full max-w-md mt-8">
+            <div class="flex flex-col items-center gap-4">
+                <input type="hidden" id="email-hidden" name="email">
+                <input
+                    id="firstName-input"
+                    type="text"
+                    name="firstName" 
+                    placeholder="Enter your first name"
+                    required
+                    class="w-full px-5 py-4 text-sm text-center sm:text-left text-white bg-black border border-white/20 rounded-md focus:ring-2 focus:ring-white focus:outline-none transition-all duration-300 placeholder-white/40"
+                />
+                <div class="flex items-center gap-3 self-start">
+                    <input type="checkbox" id="newsletter-consent" name="newsletterConsent" class="w-5 h-5 bg-black border-white/30 rounded text-white focus:ring-white cursor-pointer" checked>
+                    <label for="newsletter-consent" class="text-sm text-white/70 cursor-pointer">Yes, send me the OMEN newsletter.</label>
+                </div>
+                <button id="submit-button-details" type="submit" class="w-full px-8 py-4 bg-white text-black font-bold rounded-md hover:bg-white/80 transition-colors duration-300 whitespace-nowrap">
+                    COMPLETE SIGNUP
+                </button>
+            </div>
+        </form>
+         <p id="form-status-details" class="mt-4 text-white/70 h-6"></p>
+         <a href="index.html" id="back-link" class="hidden mt-4 text-white/50 hover:text-white underline">Back to home</a>
+    </main>
+
+    <script>
+        // --- Google Sheet Form Submission for Details ---
+        const detailsForm = document.getElementById('details-form');
+        const statusMessageDetails = document.getElementById('form-status-details');
+        const submitButtonDetails = document.getElementById('submit-button-details');
+        const hiddenEmailInput = document.getElementById('email-hidden');
+
+        // This is the same URL as your main page
+        const scriptURL = 'PASTE_YOUR_GOOGLE_SCRIPT_URL_HERE'; 
+
+        // Get email from the URL and set it in the hidden field
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const email = urlParams.get('email');
+            if (email) {
+                hiddenEmailInput.value = email;
+            } else {
+                 statusMessageDetails.innerText = 'Error: No email found.';
+                 submitButtonDetails.disabled = true;
+            }
+        });
+
+        detailsForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const firstNameInput = document.getElementById('firstName-input');
+            const consentCheckbox = document.getElementById('newsletter-consent');
+
+            submitButtonDetails.disabled = true;
+            submitButtonDetails.innerText = 'SAVING...';
+
+            const payload = {
+                email: hiddenEmailInput.value,
+                firstName: firstNameInput.value,
+                newsletterConsent: consentCheckbox.checked
+            };
+
+            fetch(scriptURL, { 
+                method: 'POST', 
+                mode: 'cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.result === 'success'){
+                    statusMessageDetails.innerText = 'Profile updated. Thank you!';
+                    detailsForm.classList.add('hidden'); // Hide form on success
+                    document.getElementById('back-link').classList.remove('hidden');
+                } else {
+                    statusMessageDetails.innerText = 'Error. Please try again.';
+                }
+            })
+            .catch(error => {
+                console.error('Error!', error.message);
+                statusMessageDetails.innerText = 'An error occurred.';
+            })
+            .finally(() => {
+                if(!detailsForm.classList.contains('hidden')){
+                    submitButtonDetails.disabled = false;
+                    submitButtonDetails.innerText = 'COMPLETE SIGNUP';
+                }
+            });
+        });
+        
+        // --- Animated background (same as index page) ---
+        const canvas = document.getElementById('background-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        const fontSize = 16;
+        const columns = Math.floor(canvas.width / fontSize);
+        const drops = Array(columns).fill(1);
+        function drawBackground() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.04)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = `${fontSize}px Roboto Mono`;
+            for (let i = 0; i < drops.length; i++) {
+                const text = characters.charAt(Math.floor(Math.random() * characters.length));
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) { drops[i] = 0; }
+                drops[i]++;
+            }
+        }
+        setInterval(drawBackground, 33);
+    </script>
+</body>
+</html>

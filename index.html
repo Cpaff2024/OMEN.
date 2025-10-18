@@ -120,6 +120,7 @@
 
     <script>
         // --- Animated Background ---
+        // (This code is unchanged)
         const canvas = document.getElementById('background-canvas');
         const ctx = canvas.getContext('2d');
         canvas.width = window.innerWidth;
@@ -128,7 +129,6 @@
         const fontSize = 16;
         const columns = Math.floor(canvas.width / fontSize);
         const drops = Array(columns).fill(1);
-
         function drawBackground() {
             ctx.fillStyle = 'rgba(0, 0, 0, 0.04)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -137,13 +137,10 @@
             for (let i = 0; i < drops.length; i++) {
                 const text = characters.charAt(Math.floor(Math.random() * characters.length));
                 ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
-                    drops[i] = 0;
-                }
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) { drops[i] = 0; }
                 drops[i]++;
             }
         }
-        
         window.addEventListener('resize', () => {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
@@ -154,6 +151,7 @@
         });
 
         // --- STATIC Countdown Timer ---
+        // (This code is unchanged)
         function startCountdown() {
             const countDownDate = new Date('2025-10-31T23:59:59Z').getTime();
             const timerInterval = setInterval(() => {
@@ -185,50 +183,45 @@
         form.addEventListener('submit', function(e) {
             e.preventDefault();
             
-            // !! IMPORTANT !! Paste your Google Script URL here
             const scriptURL = 'PASTE_YOUR_GOOGLE_SCRIPT_URL_HERE';
             const emailInput = document.getElementById('email-input');
 
             submitButton.disabled = true;
             submitButton.innerText = 'SUBMITTING...';
+            statusMessage.innerText = ''; // Clear previous messages
 
             fetch(scriptURL, { 
                 method: 'POST', 
-                mode: 'cors', // Important for cross-origin requests
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                mode: 'cors',
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email: emailInput.value })
             })
             .then(response => response.json())
             .then(data => {
                 if(data.result === 'success'){
-                    statusMessage.innerText = 'Success! Thank you for joining.';
-                    emailInput.value = ''; // Clear the input field
+                    // *** THIS IS THE NEW PART ***
+                    // Redirect to the confirmation page on success
+                    window.location.href = `confirm.html?email=${encodeURIComponent(emailInput.value)}`;
                 } else {
                     statusMessage.innerText = 'Error. Please try again.';
+                    submitButton.disabled = false;
+                    submitButton.innerText = 'JOIN WAITLIST';
                 }
             })
             .catch(error => {
                 console.error('Error!', error.message);
                 statusMessage.innerText = 'An error occurred. Please try again.';
-            })
-            .finally(() => {
                 submitButton.disabled = false;
                 submitButton.innerText = 'JOIN WAITLIST';
-                // Make the status message disappear after a few seconds
-                setTimeout(() => { statusMessage.innerText = ''; }, 5000);
             });
         });
 
         // --- Animations ---
+        // (This code is unchanged)
         function addTailwindAnimations() {
             const style = document.createElement('style');
             style.innerHTML = `
-                @keyframes fadeIn {
-                    from { opacity: 0; transform: translateY(10px); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
+                @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
                 .animate-fade-in-slow { animation: fadeIn 1.5s ease-out forwards; }
                 .animate-fade-in-delay { animation: fadeIn 1.5s ease-out 0.5s forwards; opacity: 0; }
                 .animate-fade-in-delay-2 { animation: fadeIn 1.5s ease-out 1s forwards; opacity: 0; }
