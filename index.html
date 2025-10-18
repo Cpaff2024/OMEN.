@@ -55,19 +55,24 @@
         </p>
 
         <!-- Waitlist Form -->
-        <form class="w-full max-w-md mt-8 animate-fade-in-delay-2" onsubmit="event.preventDefault(); alert('Thank you for joining!');">
+        <form id="waitlist-form" class="w-full max-w-md mt-8 animate-fade-in-delay-2">
             <div class="flex flex-col sm:flex-row items-center gap-3">
                 <input
+                    id="email-input"
                     type="email"
+                    name="email" 
                     placeholder="Enter your email address"
                     required
                     class="w-full px-5 py-4 text-sm text-center sm:text-left text-white bg-black border border-white/20 rounded-md focus:ring-2 focus:ring-white focus:outline-none transition-all duration-300 placeholder-white/40"
                 />
-                <button type="submit" class="w-full sm:w-auto px-8 py-4 bg-white text-black font-bold rounded-md hover:bg-white/80 transition-colors duration-300 whitespace-nowrap">
+                <button id="submit-button" type="submit" class="w-full sm:w-auto px-8 py-4 bg-white text-black font-bold rounded-md hover:bg-white/80 transition-colors duration-300 whitespace-nowrap">
                     JOIN WAITLIST
                 </button>
             </div>
         </form>
+        <!-- Form Status Message -->
+        <p id="form-status" class="mt-4 text-white/70 h-6"></p>
+
 
         <!-- Countdown Timer -->
         <div id="countdown-container" class="mt-12 animate-fade-in-delay-3">
@@ -103,15 +108,14 @@
                 <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
             </a>
             <a href="https://www.tiktok.com/@weareomenmedia" target="_blank" class="text-white/50 hover:text-white transition-colors duration-300" aria-label="TikTok">
-                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
-                   <path d="M16.6 5.82s.51.5 0 0c-1.42-.04-2.83.39-4.08 1.15v5.52A3.99 3.99 0 1 1 8.5 10.5v2.36a6.5 6.5 0 1 0 6.5 6.5V10.8a7.5 7.5 0 0 0 1.6-1.12z"/>
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 448 512" fill="currentColor">
+                    <path d="M448,209.91a210.06,210.06,0,0,1-122.77-39.25V349.38A162.55,162.55,0,1,1,185,188.31V278.2a74.62,74.62,0,1,0,52.23,71.18V0l88,0a121.18,121.18,0,0,0,1.86,22.17h0A122.18,122.18,0,0,0,381,102.39a121.43,121.43,0,0,0,67,20.14Z"/>
                 </svg>
             </a>
             <a href="https://www.youtube.com/@WeAreOmenMedia" target="_blank" class="text-white/50 hover:text-white transition-colors duration-300" aria-label="YouTube">
                 <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"></path><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"></polygon></svg>
             </a>
         </div>
-
     </main>
 
     <script>
@@ -120,27 +124,19 @@
         const ctx = canvas.getContext('2d');
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
-
-        // Configuration for the falling characters
         const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
         const fontSize = 16;
         const columns = Math.floor(canvas.width / fontSize);
         const drops = Array(columns).fill(1);
 
         function drawBackground() {
-            // Semi-transparent black rectangle to create the fading trail effect
             ctx.fillStyle = 'rgba(0, 0, 0, 0.04)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // Set color and font for the characters
-            ctx.fillStyle = '#FFFFFF'; // Characters are white
+            ctx.fillStyle = '#FFFFFF';
             ctx.font = `${fontSize}px Roboto Mono`;
-
             for (let i = 0; i < drops.length; i++) {
                 const text = characters.charAt(Math.floor(Math.random() * characters.length));
                 ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-
-                // Reset drop to the top randomly to make the rain effect uneven
                 if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
                     drops[i] = 0;
                 }
@@ -148,63 +144,82 @@
             }
         }
         
-        // Handle window resize
         window.addEventListener('resize', () => {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
-            // Recalculate columns and reset drops on resize
             const newColumns = Math.floor(canvas.width / fontSize);
             drops.length = 0;
             drops.length = newColumns;
             drops.fill(1);
         });
 
-
-        // --- Persistent 30-Day Countdown Timer ---
+        // --- STATIC Countdown Timer ---
         function startCountdown() {
-            const countdownEndDateKey = 'omenCountdownEndDate';
-            let countDownDate = localStorage.getItem(countdownEndDateKey);
-
-            // If there's no end date in localStorage, create one 30 days from now
-            if (!countDownDate) {
-                const newEndDate = new Date();
-                newEndDate.setDate(newEndDate.getDate() + 30);
-                countDownDate = newEndDate.getTime();
-                localStorage.setItem(countdownEndDateKey, countDownDate);
-            } else {
-                // Convert stored string back to number
-                countDownDate = parseInt(countDownDate, 10);
-            }
-
+            const countDownDate = new Date('2025-10-31T23:59:59Z').getTime();
             const timerInterval = setInterval(() => {
                 const now = new Date().getTime();
                 const distance = countDownDate - now;
-
                 if (distance < 0) {
                     clearInterval(timerInterval);
                     document.getElementById('timer').classList.add('hidden');
                     document.getElementById('countdown-end-message').classList.remove('hidden');
-                    // Optional: Clear the stored date once the countdown is over
-                    // localStorage.removeItem(countdownEndDateKey); 
                     return;
                 }
-
-                // Time calculations
                 const days = Math.floor(distance / (1000 * 60 * 60 * 24));
                 const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
                 const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
                 const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-                // Helper to add leading zero
                 const pad = (num) => (num < 10 ? '0' + num : num);
-
-                // Update the HTML
                 document.getElementById('days').innerText = pad(days);
                 document.getElementById('hours').innerText = pad(hours);
                 document.getElementById('minutes').innerText = pad(minutes);
                 document.getElementById('seconds').innerText = pad(seconds);
             }, 1000);
         }
+
+        // --- Google Sheet Form Submission ---
+        const form = document.getElementById('waitlist-form');
+        const statusMessage = document.getElementById('form-status');
+        const submitButton = document.getElementById('submit-button');
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // !! IMPORTANT !! Paste your Google Script URL here
+            const scriptURL = 'PASTE_YOUR_GOOGLE_SCRIPT_URL_HERE';
+            const emailInput = document.getElementById('email-input');
+
+            submitButton.disabled = true;
+            submitButton.innerText = 'SUBMITTING...';
+
+            fetch(scriptURL, { 
+                method: 'POST', 
+                mode: 'cors', // Important for cross-origin requests
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email: emailInput.value })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.result === 'success'){
+                    statusMessage.innerText = 'Success! Thank you for joining.';
+                    emailInput.value = ''; // Clear the input field
+                } else {
+                    statusMessage.innerText = 'Error. Please try again.';
+                }
+            })
+            .catch(error => {
+                console.error('Error!', error.message);
+                statusMessage.innerText = 'An error occurred. Please try again.';
+            })
+            .finally(() => {
+                submitButton.disabled = false;
+                submitButton.innerText = 'JOIN WAITLIST';
+                // Make the status message disappear after a few seconds
+                setTimeout(() => { statusMessage.innerText = ''; }, 5000);
+            });
+        });
 
         // --- Animations ---
         function addTailwindAnimations() {
@@ -223,14 +238,12 @@
             document.head.appendChild(style);
         }
 
-
         // --- Initialize ---
         document.addEventListener('DOMContentLoaded', () => {
-            setInterval(drawBackground, 33); // Start the background animation loop
-            startCountdown(); // Start the countdown
-            addTailwindAnimations(); // Add custom animations
+            setInterval(drawBackground, 33);
+            startCountdown();
+            addTailwindAnimations();
         });
-
     </script>
 </body>
 </html>
