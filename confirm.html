@@ -12,7 +12,6 @@
         body { font-family: 'Roboto Mono', monospace; background-color: #000000; overflow: hidden; }
         .font-montserrat { font-family: 'Montserrat', sans-serif; }
         #background-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; opacity: 0.15; }
-        .logo { font-size: clamp(3rem, 15vw, 10rem); letter-spacing: -0.05em; }
     </style>
 </head>
 <body class="text-white">
@@ -21,101 +20,72 @@
 
     <main class="relative z-10 flex flex-col items-center justify-center min-h-screen p-4 text-center">
 
-        <h1 class="font-montserrat font-black text-4xl md:text-6xl text-white">YOU'RE IN.</h1>
+        <!-- This message shows AFTER they submit the details form -->
+        <div id="success-message" class="hidden w-full max-w-md">
+            <h1 class="font-montserrat font-black text-4xl md:text-6xl text-white">PROFILE UPDATED</h1>
+            <p class="text-lg md:text-xl text-white/70 mt-4">Thank you. You're all set.</p>
+            <a href="index.html" class="mt-8 inline-block text-white/50 hover:text-white underline">Back to home</a>
+        </div>
 
-        <p class="text-lg md:text-xl text-white/70 mt-4 max-w-lg">
-            Thank you for joining the waitlist. To get our newsletter and exclusive content, complete your profile below.
-        </p>
+        <!-- This form shows initially -->
+        <div id="form-container" class="w-full max-w-md">
+            <h1 class="font-montserrat font-black text-4xl md:text-6xl text-white">YOU'RE IN.</h1>
+            <p class="text-lg md:text-xl text-white/70 mt-4 max-w-lg">
+                To get our newsletter and exclusive content, complete your profile below.
+            </p>
+            <form id="details-form" action="https://formspree.io/f/mqayjbwz" method="POST" class="w-full mt-8">
+                <div class="flex flex-col items-center gap-4">
+                    <!-- This hidden field carries the email over for the submission -->
+                    <input type="hidden" id="email-hidden" name="email">
+                    
+                    <input
+                        id="firstName-input"
+                        type="text"
+                        name="First Name" 
+                        placeholder="Enter your first name"
+                        required
+                        class="w-full px-5 py-4 text-sm text-center sm:text-left text-white bg-black border border-white/20 rounded-md focus:ring-2 focus:ring-white focus:outline-none transition-all duration-300 placeholder-white/40"
+                    />
+                    <div class="flex items-center gap-3 self-start">
+                        <input type="checkbox" id="newsletter-consent" name="Newsletter Consent" value="Yes" class="w-5 h-5 bg-black border-white/30 rounded text-white focus:ring-white cursor-pointer" checked>
+                        <label for="newsletter-consent" class="text-sm text-white/70 cursor-pointer">Yes, send me the OMEN newsletter.</label>
+                    </div>
 
-        <form id="details-form" class="w-full max-w-md mt-8">
-            <div class="flex flex-col items-center gap-4">
-                <input type="hidden" id="email-hidden" name="email">
-                <input
-                    id="firstName-input"
-                    type="text"
-                    name="firstName" 
-                    placeholder="Enter your first name"
-                    required
-                    class="w-full px-5 py-4 text-sm text-center sm:text-left text-white bg-black border border-white/20 rounded-md focus:ring-2 focus:ring-white focus:outline-none transition-all duration-300 placeholder-white/40"
-                />
-                <div class="flex items-center gap-3 self-start">
-                    <input type="checkbox" id="newsletter-consent" name="newsletterConsent" class="w-5 h-5 bg-black border-white/30 rounded text-white focus:ring-white cursor-pointer" checked>
-                    <label for="newsletter-consent" class="text-sm text-white/70 cursor-pointer">Yes, send me the OMEN newsletter.</label>
+                    <!-- IMPORTANT: This hidden field tells Formspree where to redirect after submission -->
+                    <input type="hidden" name="_next" id="next-url-input" value="">
+                    
+                    <button id="submit-button-details" type="submit" class="w-full px-8 py-4 bg-white text-black font-bold rounded-md hover:bg-white/80 transition-colors duration-300 whitespace-nowrap">
+                        COMPLETE SIGNUP
+                    </button>
                 </div>
-                <button id="submit-button-details" type="submit" class="w-full px-8 py-4 bg-white text-black font-bold rounded-md hover:bg-white/80 transition-colors duration-300 whitespace-nowrap">
-                    COMPLETE SIGNUP
-                </button>
-            </div>
-        </form>
-         <p id="form-status-details" class="mt-4 text-white/70 h-6"></p>
-         <a href="index.html" id="back-link" class="hidden mt-4 text-white/50 hover:text-white underline">Back to home</a>
+            </form>
+        </div>
     </main>
 
     <script>
-        // --- Google Sheet Form Submission for Details ---
-        const detailsForm = document.getElementById('details-form');
-        const statusMessageDetails = document.getElementById('form-status-details');
-        const submitButtonDetails = document.getElementById('submit-button-details');
-        const hiddenEmailInput = document.getElementById('email-hidden');
-
-        // This is the same URL as your main page
-        const scriptURL = 'PASTE_YOUR_GOOGLE_SCRIPT_URL_HERE'; 
-
-        // Get email from the URL and set it in the hidden field
         document.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
             const email = urlParams.get('email');
+            
+            // Populate the hidden email field
             if (email) {
-                hiddenEmailInput.value = email;
-            } else {
-                 statusMessageDetails.innerText = 'Error: No email found.';
-                 submitButtonDetails.disabled = true;
+                document.getElementById('email-hidden').value = email;
+            } else if (!urlParams.has('success')) {
+                // If there's no email AND it's not a success redirect, show an error.
+                document.getElementById('form-container').innerHTML = '<p class="text-white/70">Error: Could not find email. Please sign up again.</p><a href="index.html" class="mt-4 inline-block text-white/50 hover:text-white underline">Back to home</a>';
+            }
+
+            // Set the redirect URL for the form to this page, but with a success flag
+            const successUrl = window.location.origin + window.location.pathname + '?success=true';
+            document.getElementById('next-url-input').value = successUrl;
+
+            // Check if Formspree redirected here with a success message
+            if (urlParams.has('success')) {
+                document.getElementById('form-container').classList.add('hidden');
+                document.getElementById('success-message').classList.remove('hidden');
             }
         });
 
-        detailsForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const firstNameInput = document.getElementById('firstName-input');
-            const consentCheckbox = document.getElementById('newsletter-consent');
-
-            submitButtonDetails.disabled = true;
-            submitButtonDetails.innerText = 'SAVING...';
-
-            const payload = {
-                email: hiddenEmailInput.value,
-                firstName: firstNameInput.value,
-                newsletterConsent: consentCheckbox.checked
-            };
-
-            fetch(scriptURL, { 
-                method: 'POST', 
-                mode: 'cors',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if(data.result === 'success'){
-                    statusMessageDetails.innerText = 'Profile updated. Thank you!';
-                    detailsForm.classList.add('hidden'); // Hide form on success
-                    document.getElementById('back-link').classList.remove('hidden');
-                } else {
-                    statusMessageDetails.innerText = 'Error. Please try again.';
-                }
-            })
-            .catch(error => {
-                console.error('Error!', error.message);
-                statusMessageDetails.innerText = 'An error occurred.';
-            })
-            .finally(() => {
-                if(!detailsForm.classList.contains('hidden')){
-                    submitButtonDetails.disabled = false;
-                    submitButtonDetails.innerText = 'COMPLETE SIGNUP';
-                }
-            });
-        });
-        
         // --- Animated background (same as index page) ---
         const canvas = document.getElementById('background-canvas');
         const ctx = canvas.getContext('2d');
@@ -141,3 +111,4 @@
     </script>
 </body>
 </html>
+
